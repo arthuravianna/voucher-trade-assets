@@ -26,16 +26,10 @@ ERC20_TRANSFER_HEADER =  b'Y\xda*\x98N\x16Z\xe4H|\x99\xe5\xd1\xdc\xa7\xe0L\x8a\x
 
 k = keccak.new(digest_bits=256)
 k.update(b'executeSwap(address,uint,address,address)')
-SWAP_FUNCTION = k.digest()[:4] # first 4 bytes 
+SWAP_FUNCTION = k.digest()[:4] # first 4 bytes
 
 
 logger.info(f"HTTP rollup_server url is {rollup_server}")
-
-def hex2str(hex):
-    """
-    Decodes a hex string into a regular string
-    """
-    return bytes.fromhex(hex[2:]).decode("utf-8")
 
 def str2hex(str):
     """
@@ -55,14 +49,14 @@ def handle_advance(data):
     try:
         if data["metadata"]["msg_sender"] != rollup_address:
             raise Exception(f"Input does not come from the Portal", data["payload"])
-        
-        binary = hex2str(data["payload"])
+
+        binary = bytes.fromhex(data["payload"][2:])
 
         # decode payload
         (input_header, depositor, depositedERC20,
          amount, deposit_data) = decode_abi(['bytes32', 'address', 'address', 'uint256', 'bytes'], binary)
-        
-        
+
+
         if input_header != ERC20_TRANSFER_HEADER:
             raise Exception(f"Input header is not from an ERC20 transfer", data["payload"])
 
@@ -77,7 +71,7 @@ def handle_advance(data):
         }
 
         post("notice", {"payload": str2hex(json.dumps(notice))})
-        
+
         voucher_payload = SWAP_FUNCTION + encode_abi(["address", "uint", "address", "address"], [depositedERC20, amount, depositor, desiredERC20])
         voucher = {"address": swapper_contract, "payload": "0x" + voucher_payload.hex()}
         post("voucher", voucher)

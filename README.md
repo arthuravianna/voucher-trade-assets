@@ -1,12 +1,6 @@
 # voucher-trade-assets DApp
 
-This DApp is a coin toss game between two players. The purpose of this example is to illustrate the cycle of Layer-1 to Layer-2 to Layer-1 again. The smart contract in the contracts folder handles the game logic, and the Cartesi Machine is the game "engine" (coin toss). After the machine runs the game and decides on the winner, it generates a voucher to send the result back to Layer-1 when executed. The game workflow is as follows:
 
-1. The player calls the `play` method of the `voucher-trade-assets` contract passing his opponent's address to create a game.
-2. The opponent calls the same `play` method passing the challenger's address. Now that both players decided to play, the algorithm will generate randomness and send an input to the Cartesi Rollups with the players and the randomness.^
-3. Inside the Cartesi Machine the game between the players is run using the randomness provided as seed. Once the winner is settled, the Cartesi DApp generates a voucher.
-4. Waits for the epoch and the dispute period to end so the voucher can be validated and executed.^^
-5. Execute the voucher.^^^
 
 
 ^ The Cartesi Machine is devoid of any source of entropy for it to be deterministic, so an external randomness is needed.
@@ -168,17 +162,13 @@ After that, you can interact with the application normally [as explained above](
 
 ## Interacting with the DApp
 
-After the `voucher-trade-assets` contract was deployed and the Cartesi Node is running the application is ready and users can finally interact with it. The procedure for interacting is as follows:
+After the `swapper` contract was deployed and the Cartesi Node is running the application is ready and users can finally interact with it. The procedure for interacting is as follows:
 
-1. On Remix IDE, execute the `set_dapp_address` method of the `voucher-trade-assets` contract to set the rollup contract address. This step is to allow the layer-1 contract to send inputs to the Cartesi Rollups.
-2. Execute the `play` method passing the opponent's address to challenge him for a coin toss game.
-3. The challenged player executes the same `play` method passing the challenger address. The input is then fetched by the Cartesi Node the coin toss is executed inside the Cartesi Machine. A notice and a voucher are generated.
-4. (Optional) Check the notice and the voucher using the [frontend-console](https://github.com/cartesi/rollups-examples/tree/main/frontend-console).
-5. Wait for the dispute period to end to execute the voucher. The dispute period is set to 5 minutes in testnet^, as can be seen in `deploy-testnet.yml`. If running locally advance the time with the following command:
-```shell
-curl --data '{"id":1337,"jsonrpc":"2.0","method":"evm_increaseTime","params":[864010]}' http://localhost:8545
-```
-6. Execute the voucher using the `frontend-console`.
-7. (Optional) Check the value of the `last_game` variable in the `voucher-trade-assets` smart contract to see the persisted result in layer-1 due to the voucher execution.
+1. On Remix IDE, execute the `set_dapp_address` method of the `swapper` contract to set the rollup contract address. This step is to allow the layer-1 contract to send inputs to the Cartesi Rollups.
+2. Execute the `rollupSwap` method passing the token that you are offering, the amount, and the desired token.
+3. (Optional) Check the notice and the voucher using the [frontend-console](https://github.com/cartesi/rollups-examples/tree/main/frontend-console).
+4. Wait for the dispute period to end to execute the voucher. The dispute period is set to 5 minutes in testnet^, as can be seen in `deploy-testnet.yml`.
+5. Execute the voucher using the `frontend-console`.
+6. Check your account balance to see the new tokens.
 
 ^ **This value was chosen for testing purposes, do not use it in production!!!** The default value is 1 week.
