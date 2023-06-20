@@ -37,12 +37,15 @@ contract TradeAssetsUniswapV2 {
 
     function rollupSwap(address erc20, uint256 swap_amount, address desiredToken) public {
         require(L2_DAPP != address(0), "Must set Rollups address first.");
-        
+
         IERC20 token = IERC20(erc20);
 
         // transfer the tokens to this contract to use the assets
         require(token.transferFrom(msg.sender, address(this), swap_amount), "ERC20 transferFrom failed");
-        
+
+        // allow Portal to manage the assets
+        require(token.approve(L2_DAPP, swap_amount), "Approve failed.");
+
         bytes memory data = abi.encode(address(this), desiredToken);
         IERC20Portal(L2_DAPP).erc20Deposit(erc20, swap_amount, data);
     }
@@ -50,14 +53,14 @@ contract TradeAssetsUniswapV2 {
     function executeSwap(address depositedToken, uint amountIn, address to, address desiredToken) public {
         require(msg.sender == L2_DAPP, "Only the Cartesi DApp can execute the swap.");
 
-        require(IUniswapV2ERC20(depositedToken).approve(address(uniswapV2Router), amountIn), "approve failed.");
+        require(IUniswapV2ERC20(depositedToken).approve(address(uniswapV2Router), amountIn), "Approve failed.");
 
         // get pool's address
         address pair = uniswapV2Factory.getPair(desiredToken, depositedToken);
 
         // get each token reserves in the pool
         (uint112 tkAReserves, uint112 tkBReserves, ) = IUniswapV2Pair(pair).getReserves();
-        
+
         // asks how many token B the user can get if he sells "amountIn" of token A
         uint amountOutMin = uniswapV2Router.quote(amountIn, tkAReserves, tkBReserves);
 
